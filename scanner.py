@@ -2,15 +2,26 @@
 
 This module coordinates the pattern detection, risk scoring, and LLM classification
 to provide a complete scan of input text.
+
+Security: Uses secure logging to prevent sensitive data exposure (OWASP A02).
 """
 
 import time
+import sys
+import hashlib
+import uuid
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+
+# Add api directory to path for security_logging import
+pisc_root = Path(__file__).parent
+sys.path.insert(0, str(pisc_root / "api"))
 
 from patterns import PatternMatch, run_regex_scan
 from scorer import RiskScorer, ScanScore
 from llm_classifier import LLMClassifier, LLMResult
+from api.security_logging import SecurityLogger, log_scan_event, _hash_prompt
 
 
 # Type for verdict
@@ -57,6 +68,8 @@ class Scanner:
         """Initialize the scanner."""
         self.risk_scorer = RiskScorer()
         self.llm_classifier = LLMClassifier()
+        # Initialize secure logger
+        self.logger = SecurityLogger("pisc.scanner")
 
     async def scan(self, prompt: str, force_llm: bool = False) -> ScanResult:
         """Scan a prompt for prompt injection vulnerabilities.
@@ -77,30 +90,45 @@ class Scanner:
         """
         start_time = time.perf_counter()
 
+        # Generate correlation ID for this scan
+        correlation_id = f"scan_{int(time.time() * 1000)}"
+
         # Stage 1: Regex scan
-        print(
-            {"stage": "regex_scan", "status": "started", "prompt_length": len(prompt)}
+        log_scan_event(
+            self.logger,
+            stage="regex_scan",
+            status="started",
+            correlation_id=correlation_id,
+            prompt_length=len(prompt),
+            prompt_hash=(
+                hashlib.sha256(prompt.encode()).hexdigest()[:8] if prompt else None
+            ),
         )
         matches = run_regex_scan(prompt)
-        print(
-            {
-                "stage": "regex_scan",
-                "status": "completed",
-                "matches_found": len(matches),
-            }
+        log_scan_event(
+            self.logger,
+            stage="regex_scan",
+            status="completed",
+            correlation_id=correlation_id,
+            matches_found=len(matches),
         )
 
         # Stage 2: Compute risk score
-        print({"stage": "risk_scoring", "status": "started"})
+        log_scan_event(
+            self.logger,
+            stage="risk_scoring",
+            status="started",
+            correlation_id=correlation_id,
+        )
         regex_score = self.risk_scorer.calculate_score(matches)
-        print(
-            {
-                "stage": "risk_scoring",
-                "status": "completed",
-                "risk_score": regex_score.risk_score,
-                "risk_level": regex_score.risk_level,
-                "should_escalate": regex_score.should_escalate_to_llm,
-            }
+        log_scan_event(
+            self.logger,
+            stage="risk_scoring",
+            status="completed",
+            correlation_id=correlation_id,
+            risk_score=regex_score.risk_score,
+            risk_level=regex_score.risk_level,
+            should_escalate=regex_score.should_escalate_to_llm,
         )
 
         # Stage 3: LLM classification (if needed)
@@ -108,46 +136,51 @@ class Scanner:
         should_llm = regex_score.should_escalate_to_llm or force_llm
 
         if should_llm:
-            print(
-                {
-                    "stage": "llm_classification",
-                    "status": "started",
-                    "reason": (
-                        "escalation_triggered"
-                        if regex_score.should_escalate_to_llm
-                        else "force_llm"
-                    ),
-                }
+            log_scan_event(
+                self.logger,
+                stage="llm_classification",
+                status="started",
+                correlation_id=correlation_id,
+                reason=(
+                    "escalation_triggered"
+                    if regex_score.should_escalate_to_llm
+                    else "force_llm"
+                ),
             )
             llm_result = await self.llm_classifier.classify(prompt, regex_score)
-            print(
-                {
-                    "stage": "llm_classification",
-                    "status": "completed",
-                    "verdict": llm_result.verdict,
-                    "confidence": llm_result.confidence,
-                    "error": llm_result.error,
-                }
+            log_scan_event(
+                self.logger,
+                stage="llm_classification",
+                status="completed",
+                correlation_id=correlation_id,
+                verdict=llm_result.verdict,
+                confidence=llm_result.confidence,
+                error=llm_result.error,
             )
         else:
-            print(
-                {
-                    "stage": "llm_classification",
-                    "status": "skipped",
-                    "reason": "risk_score_below_threshold",
-                }
+            log_scan_event(
+                self.logger,
+                stage="llm_classification",
+                status="skipped",
+                correlation_id=correlation_id,
+                reason="risk_score_below_threshold",
             )
 
         # Stage 4: Derive final verdict
-        print({"stage": "final_verdict", "status": "started"})
+        log_scan_event(
+            self.logger,
+            stage="final_verdict",
+            status="started",
+            correlation_id=correlation_id,
+        )
         final_verdict = self._derive_final_verdict(llm_result, regex_score.risk_level)
-        print(
-            {
-                "stage": "final_verdict",
-                "status": "completed",
-                "verdict": final_verdict,
-                "source": "llm" if llm_result else "regex",
-            }
+        log_scan_event(
+            self.logger,
+            stage="final_verdict",
+            status="completed",
+            correlation_id=correlation_id,
+            verdict=final_verdict,
+            source="llm" if llm_result else "regex",
         )
 
         # Calculate duration

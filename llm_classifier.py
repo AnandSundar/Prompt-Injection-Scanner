@@ -2,17 +2,30 @@
 
 This module provides LLM-based classification to enhance pattern detection
 with semantic analysis capabilities using OpenAI's AsyncOpenAI client.
+
+Security:
+- A03: Input validation and sanitization
+- A10: SSRF prevention with timeouts and request validation
 """
 
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, Literal, Optional
 
 from dotenv import load_dotenv
 
+# Import security modules
+from api.security_validation import validate_input, check_injection_patterns
+from api.security_ssrf import validate_url, validate_openai_endpoint
+
 # Load environment variables
 load_dotenv()
+
+# Input validation constants
+MAX_PROMPT_LENGTH: int = 50 * 1024  # 50KB
+MIN_PROMPT_LENGTH: int = 1
 
 
 # Type definitions
@@ -100,6 +113,8 @@ class LLMClassifier:
     async def classify(self, prompt: str, regex_context: Any) -> LLMResult:
         """Classify text using LLM for deeper analysis.
 
+        Security (A03, A10): Input validation and SSRF prevention.
+
         Args:
             prompt: The text to classify
             regex_context: ScanScore from regex detection (contains matched_categories and risk_score)
@@ -107,6 +122,34 @@ class LLMClassifier:
         Returns:
             LLMResult with classification
         """
+        # Input validation (A03: Injection Prevention)
+        if not isinstance(prompt, str):
+            return LLMResult(
+                verdict="UNKNOWN",
+                confidence=0.0,
+                reasoning="Invalid input: prompt must be a string",
+                payload_type="none",
+                error="Invalid input type",
+            )
+
+        if len(prompt) > MAX_PROMPT_LENGTH:
+            return LLMResult(
+                verdict="UNKNOWN",
+                confidence=0.0,
+                reasoning=f"Input too long: {len(prompt)} chars (max {MAX_PROMPT_LENGTH})",
+                payload_type="none",
+                error="Prompt exceeds maximum length",
+            )
+
+        if len(prompt) < MIN_PROMPT_LENGTH:
+            return LLMResult(
+                verdict="UNKNOWN",
+                confidence=0.0,
+                reasoning="Input too short",
+                payload_type="none",
+                error="Prompt is too short",
+            )
+
         if not self.is_available():
             return LLMResult(
                 verdict="UNKNOWN",
@@ -326,7 +369,9 @@ Return JSON with: verdict (BENIGN/SUSPICIOUS/INJECTION), confidence (0.0-1.0), r
 
 
 # Convenience function for synchronous usage
-def create_classifier(api_key: Optional[str] = None, model: Optional[str] = None) -> LLMClassifier:
+def create_classifier(
+    api_key: Optional[str] = None, model: Optional[str] = None
+) -> LLMClassifier:
     """Create an LLM classifier instance.
 
     Args:

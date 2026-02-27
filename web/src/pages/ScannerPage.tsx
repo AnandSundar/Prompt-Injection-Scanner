@@ -33,7 +33,7 @@ export function ScannerPage() {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [forceLLM, setForceLLM] = useState(false);
-  const [stage, setStage] = useState<string>("idle");
+  const [stage, setStage] = useState<"idle" | "analyzing" | "reading" | "regex" | "llm" | "complete">("idle");
   const [result, setResult] = useState<ScanResult | null>(null);
 
   const handleScan = async () => {
@@ -168,7 +168,7 @@ export function ScannerPage() {
           />
 
           {/* Stage Progress */}
-          {isLoading && <StageProgress stage={stage as any} />}
+          {isLoading && <StageProgress stage={stage} />}
 
           {/* Result Card */}
           {result && !isLoading && (

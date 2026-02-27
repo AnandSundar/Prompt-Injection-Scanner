@@ -7,7 +7,10 @@
         "dev": "vite",
         "build": "tsc -b && vite build",
         "lint": "eslint .",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "audit": "npm audit",
+        "audit:fix": "npm audit fix",
+        "check:security": "npm run audit && npm run lint"
     },
     "dependencies": {
         "@radix-ui/react-slot": "^1.2.4",

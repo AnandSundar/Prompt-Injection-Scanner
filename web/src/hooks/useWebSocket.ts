@@ -1,6 +1,9 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { ScanResponse } from "@/types/api.types";
 
+// Storage key for PISC API authentication key
+const PISC_AUTH_KEY = "pisc_auth_key";
+
 interface UseWebSocketOptions {
     url?: string;
     onMessage?: (data: ScanResponse) => void;
@@ -37,7 +40,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
         }
 
         try {
-            const ws = new WebSocket(url);
+            // A07: Add API key to WebSocket URL query parameter for authentication
+            const authKey = localStorage.getItem(PISC_AUTH_KEY);
+            let wsUrl = url;
+            if (authKey) {
+                const separator = url.includes('?') ? '&' : '?';
+                wsUrl = `${url}${separator}api_key=${encodeURIComponent(authKey)}`;
+            }
+
+            const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
 
             ws.onopen = () => {

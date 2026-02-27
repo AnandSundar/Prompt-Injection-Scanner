@@ -1,0 +1,33 @@
+# PISC - Prompt Injection Scanner - Dependencies
+# OWASP A06: Vulnerable Components - Keep dependencies updated
+
+# Core dependencies
+fastapi==0.104.1
+uvicorn==0.24.0
+python-multipart==0.0.6
+pydantic==2.5.2
+pydantic-settings==2.1.0
+
+# Security dependencies
+slowapi==0.1.8
+passlib==1.7.4
+python-jose==3.3.0
+python-multipart==0.0.6
+
+# LLM dependencies
+openai==1.3.7
+python-dotenv==1.0.0
+
+# Logging and monitoring
+structlog==24.2.0
+python-json-logger==2.0.7
+
+# Development dependencies (only for development)
+pytest==7.4.4
+pytest-asyncio==0.23.3
+httpx==0.25.2
+
+# Security audit tools
+safety==2.3.5
+bandit==1.7.5
+pip-audit==2.6.1

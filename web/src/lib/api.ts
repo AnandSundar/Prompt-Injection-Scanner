@@ -3,6 +3,9 @@ import { ScanRequest, ScanResponse } from "@/types/api.types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+// Storage key for PISC API authentication key
+const PISC_AUTH_KEY = "pisc_auth_key";
+
 class ApiClient {
     private client: AxiosInstance;
 
@@ -18,7 +21,11 @@ class ApiClient {
         // Request interceptor
         this.client.interceptors.request.use(
             (config) => {
-                // Add any auth headers here if needed
+                // Add PISC API authentication header (A07:2021)
+                const authKey = localStorage.getItem(PISC_AUTH_KEY);
+                if (authKey) {
+                    config.headers["X-API-Key"] = authKey;
+                }
                 return config;
             },
             (error) => {

@@ -1,0 +1,15 @@
+# Dependency Security Audit - PISC Project
+
+## Python Dependencies
+- fastapi>=0.100.0
+- uvicorn[standard]>=0.23.0
+- python-dotenv>=1.0.0
+- pydantic>=2.0.0
+- slowapi>=0.1.9
+- openai>=1.0.0
+
+## Security Requirements
+- Run `pip audit` or `safety check` regularly
+- Use `npm audit` for JavaScript dependencies
+- Keep dependencies up to date
+- Review security advisories for all transitive dependencies
