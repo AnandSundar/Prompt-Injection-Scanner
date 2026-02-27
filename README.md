@@ -181,6 +181,12 @@ PISC (Prompt Injection Scanner) is a turnkey security solution that helps you pr
 | **Multiple Interfaces** | CLI, REST API, and Web UI included |
 | **Scan History** | Persistent local history with search and filtering (Web UI) |
 | **Pattern Management** | List and inspect all detection patterns |
+| **Security Hardening** | OWASP Top 10 security controls implementation |
+| **Input Validation** | Comprehensive input validation and sanitization (A03: Injection Prevention) |
+| **SSRF Prevention** | Server-side request forgery protection (A10: SSRF Prevention) |
+| **Secure Logging** | Tamper-evident security logging (A08: Data Integrity) |
+| **Security Auditing** | Comprehensive security audit system (A09: Logging & Monitoring) |
+| **Verification Script** | Automated security controls verification tool |
 
 ---
 
@@ -387,6 +393,16 @@ pisc scan-file prompts.txt
 pisc patterns
 ```
 
+#### Security Verification
+
+Run the automated security controls verification:
+
+```bash
+python security_verification.py
+```
+
+This will test all OWASP Top 10 security controls and provide a comprehensive security report.
+
 #### JSON Output
 
 ```bash
@@ -587,16 +603,27 @@ MIT License - see LICENSE file for details.
 
 ```
 pisc/
-├── __init__.py           # Package init
-├── cli.py                # CLI entry point
-├── scanner.py            # Core scanner orchestration
-├── scorer.py             # Risk scoring logic
-├── patterns.py           # Regex pattern definitions
-├── llm_classifier.py     # OpenAI classification
+├── __init__.py                # Package init
+├── cli.py                     # CLI entry point
+├── scanner.py                 # Core scanner orchestration
+├── scorer.py                  # Risk scoring logic
+├── patterns.py                # Regex pattern definitions
+├── llm_classifier.py          # OpenAI classification
+├── security_verification.py   # Security controls verification
+├── test_security_modules.py   # Tests for security modules
+├── test_validation.py         # Tests for input validation
+├── SECURITY.md                # Security documentation
+├── requirements.txt           # Python dependencies
 ├── api/
-│   ├── main.py           # FastAPI server
-│   └── run.py            # API runner
-├── web/                  # React web interface
+│   ├── main.py                # FastAPI server
+│   ├── run.py                 # API runner
+│   ├── security_audit.py      # Security audit logging
+│   ├── security_logging.py    # Secure logging module
+│   ├── security_ssrf.py       # SSRF prevention
+│   └── security_validation.py # Input validation
+├── plans/
+│   └── OWASP_SECURITY_HARDENING_PLAN.md # Security plan
+├── web/                       # React web interface
 │   ├── src/
 │   │   ├── components/   # UI components
 │   │   ├── pages/        # Route pages
