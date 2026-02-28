@@ -162,8 +162,13 @@ class SecurityLogger:
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.DEBUG)
 
-        # Remove existing handlers
-        self.logger.handlers.clear()
+        # Prevent log propagation to parent logger (causes duplicate entries)
+        self.logger.propagate = False
+
+        # Critical fix: Prevent duplicate handlers (duplicate log entries)
+        # Check if handlers already exist and remove them before adding new ones
+        if len(self.logger.handlers) > 0:
+            self.logger.handlers.clear()
 
         # Console handler with JSON formatter
         console_handler = logging.StreamHandler()

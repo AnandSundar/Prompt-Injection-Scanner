@@ -27,7 +27,7 @@ from fastapi import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator, ConfigDict
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -198,13 +198,14 @@ class ScanRequest(BaseModel):
         """Validate and sanitize the prompt field."""
         return prompt_validator(value)
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "prompt": "This is a sample prompt to scan",
                 "force_llm": False,
             }
         }
+    )
 
 
 class ScanResponse(BaseModel):
