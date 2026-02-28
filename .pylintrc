@@ -1,0 +1,2 @@
+[MASTER]
+init-hook='import sys; sys.path.insert(0, "c:/Users/HP/Desktop/OWASP Top 10 agentic AI/pisc"); sys.path.insert(0, "c:/Users/HP/Desktop/OWASP Top 10 agentic AI/pisc/api")'

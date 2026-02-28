@@ -22,21 +22,22 @@ import subprocess
 from typing import Dict, List, Tuple
 from pathlib import Path
 
+pisc_root = Path(__file__).parent
+
+# Add api directory to path
+sys.path.insert(0, str(pisc_root))
+sys.path.insert(0, str(pisc_root / "api"))
+
 # Load environment variables from .env file
 from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=pisc_root / ".env")
 
 # Import security modules from api directory
 from api.security_validation import validate_input, MAX_INPUT_LENGTH
 from api.security_ssrf import validate_url, block_internal_ips
 from api.security_logging import SecurityLogger
 from api.security_audit import audit_logger, AuditEventType, AuditSeverity
-
-pisc_root = Path(__file__).parent
-load_dotenv(dotenv_path=pisc_root / ".env")
-
-# Add api directory to path
-sys.path.insert(0, str(pisc_root))
-sys.path.insert(0, str(pisc_root / "api"))
 
 
 def check_environment_config() -> List[Tuple[str, bool, str]]:
