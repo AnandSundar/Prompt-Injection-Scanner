@@ -14,10 +14,6 @@ from typing import Any, Dict, List, Optional
 from contextlib import asynccontextmanager
 
 # Add the parent directory to the path so pisc can be imported
-import sys
-from pathlib import Path
-
-# Add parent directory to path
 pisc_root = Path(__file__).parent.parent
 sys.path.insert(0, str(pisc_root))
 
@@ -27,32 +23,31 @@ from fastapi import (
     WebSocketDisconnect,
     Request,
     HTTPException,
-    Depends,
     Query,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
-# Import from pisc package
+# Import from root directory
 from scanner import Scanner, ScanResult, scan as scan_function
 from scorer import ScanScore, RiskScorer
 from llm_classifier import LLMResult, LLMClassifier
 from patterns import PatternEntry, run_regex_scan, ALL_PATTERNS
 
-# Import security modules
-from security_logging import SecurityLogger, log_security_event
-from security_validation import (
+# Import security modules from api directory
+from api.security_logging import SecurityLogger, log_security_event
+from api.security_validation import (
     validate_input,
     prompt_validator,
     check_injection_patterns,
 )
-from security_ssrf import validate_url, validate_openai_endpoint, ssrf_protection
-from security_audit import audit_logger, AuditEventType, AuditSeverity
+from api.security_ssrf import validate_url, validate_openai_endpoint, ssrf_protection
+from api.security_audit import audit_logger, AuditEventType, AuditSeverity
 
 
 # =============================================================================
@@ -191,13 +186,17 @@ class ScanRequest(BaseModel):
         description="The text prompt to scan for injection",
         min_length=MIN_PROMPT_LENGTH,
         max_length=MAX_PROMPT_LENGTH,
-        # Use security validator
-        validation_alias=prompt_validator,
     )
     force_llm: bool = Field(
         default=False,
         description="Force LLM classification regardless of risk score",
     )
+
+    @field_validator("prompt")
+    @classmethod
+    def validate_prompt(cls, value: str) -> str:
+        """Validate and sanitize the prompt field."""
+        return prompt_validator(value)
 
     class Config:
         json_schema_extra = {
@@ -431,10 +430,8 @@ app.add_exception_handler(
     ),
 )
 
+
 # Add validation error handler (A04: Better error messages)
-from pydantic import ValidationError
-
-
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
     """Handle Pydantic validation errors with safe error messages."""
@@ -567,10 +564,6 @@ async def websocket_scan(websocket: WebSocket, api_key: str = Query(None)):
     key_to_check = api_key or header_api_key
 
     if PISC_API_KEY and key_to_check != PISC_API_KEY:
-        await websocket.close(code=4001, reason="Invalid or missing API key")
-        return
-
-    if PISC_API_KEY and api_key != PISC_API_KEY:
         await websocket.close(code=4001, reason="Invalid or missing API key")
         return
 
@@ -759,21 +752,3 @@ async def health_check() -> HealthResponse:
 # =============================================================================
 # Entry Point
 # =============================================================================
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    # Security configuration (A05)
-    # - Bind to localhost by default (not 0.0.0.0)
-    # - Add timeout settings
-    # - Request size limit enforced via FastAPI
-
-    uvicorn.run(
-        app,
-        host=DEFAULT_HOST,  # Default: 127.0.0.1 (localhost only)
-        port=DEFAULT_PORT,
-        timeout_keep_alive=30,  # Timeout for keep-alive connections
-        limit_concurrency=100,  # Max concurrent connections
-        limit_max_requests=1000,  # Max requests per worker before restart
-    )
