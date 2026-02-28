@@ -578,6 +578,31 @@ curl http://localhost:8000/patterns
 6. **Multi-turn Planning** - Multi-stage attack sequences
 
 ---
+Homepage
+<img width="1547" height="902" alt="image" src="https://github.com/user-attachments/assets/c37f9046-2665-464c-a536-e8bfb007ab47" />
+
+Prompt scanner flagging the suspicious HIGH RISK prompt
+
+<img width="1553" height="902" alt="image" src="https://github.com/user-attachments/assets/a9f89a4b-7a41-42fd-8a3d-73e3d1cabc3b" />
+
+Example of LOW RISK prompt
+
+<img width="1575" height="907" alt="image" src="https://github.com/user-attachments/assets/f83832db-3faa-4887-bdb6-06c170eb83bc" />
+
+How It Works page to learn how the scanner works
+
+<img width="1592" height="908" alt="image" src="https://github.com/user-attachments/assets/62b68435-bb7d-420e-a88b-86e2cbc79b5d" />
+
+Patterns page show the 40+ common hacker patterns and when AI review is used
+
+<img width="1587" height="911" alt="image" src="https://github.com/user-attachments/assets/d127d63b-6865-4828-8c13-4995a7a1450c" />
+
+Add your openAI key here for AI based review
+
+<img width="1392" height="851" alt="image" src="https://github.com/user-attachments/assets/1e0f2777-1386-4175-b3a2-6557c85c1ba6" />
+
+
+---
 
 ## Contributing
 
