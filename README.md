@@ -1,5 +1,8 @@
 # PISC - Prompt Injection Scanner
 
+<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/f69eac05-5f83-4328-b97c-541c954b2f74" />
+
+
 A comprehensive security tool for detecting and classifying prompt injection vulnerabilities in LLM applications. PISC combines regex pattern matching with AI-powered classification to identify malicious prompts before they reach your language models.
 
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
